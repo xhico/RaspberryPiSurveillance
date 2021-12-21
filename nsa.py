@@ -8,11 +8,17 @@ import os
 import time
 import signal
 import subprocess
-from dotenv import load_dotenv
-load_dotenv()
+import json
+
+def get911(key):
+    f = open('/home/pi/.911')
+    data = json.load(f)
+    f.close()
+    return data[key]
+    
 
 debug = False
-MAC_ADDR = os.environ.get('BLUETOOTH')
+MAC_ADDR = get911('BLUETOOTH_ADDRESS')
 
 
 def scanXhico():

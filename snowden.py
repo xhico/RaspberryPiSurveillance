@@ -5,6 +5,7 @@
 import io
 import os
 import time
+import json
 import glob
 import yagmail
 import picamera
@@ -13,9 +14,14 @@ import numpy as np
 from threading import Thread
 import subprocess
 from nsa import debug
-from dotenv import load_dotenv
-load_dotenv()
 
+
+def get911(key):
+    f = open('/home/pi/.911')
+    data = json.load(f)
+    f.close()
+    return data[key]
+    
 
 REC_WIDTH = 640              # video width
 REC_HEIGHT = 480             # video height
@@ -28,9 +34,9 @@ FILE_BUFFER = 548576         # the size of the file buffer (bytes)
 MOTION_MAGNITUDE = 65        # the magnitude of vectors required for motion
 MOTION_VECTORS = 5           # the number of vectors required to detect motion
 
-EMAIL_SENDER = os.environ.get('MAIL_USER')          # email account that sends the email
-EMAIL_PASSWORD = os.environ.get('MAIL_PASS')        # password for the email sender account
-EMAIL_RECEIVER = os.environ.get('MAIL_RECEIVER')    # email to send the video
+EMAIL_SENDER = get911('EMAIL_USER')          # email account that sends the email
+EMAIL_PASSWORD = get911('EMAIL_APPPW')        # password for the email sender account
+EMAIL_RECEIVER = get911('EMAIL_RECEIVER')    # email to send the video
 
 
 class MotionDetector(picamera.array.PiMotionAnalysis):
