@@ -10,12 +10,13 @@ import signal
 import subprocess
 import json
 
+
 def get911(key):
     f = open('/home/pi/.911')
     data = json.load(f)
     f.close()
     return data[key]
-    
+
 
 debug = False
 MAC_ADDR = get911('BLUETOOTH_ADDRESS')
@@ -47,7 +48,8 @@ def stopRun():
     if debug:
         print("Stop")
 
-    os.system('kill $(ps ax | grep \'python3 /home/pi/nsa/snowden.py\' | grep -v grep | awk \'{print $1}\')')
+    os.system(
+        'kill $(ps ax | grep \'python3 /home/pi/RaspberryPiSurveillance/snowden.py\' | grep -v grep | awk \'{print $1}\')')
 
     global isRunning
     isRunning = False
@@ -57,8 +59,8 @@ def stopRun():
 def startRun():
     if debug:
         print("Start")
-    
-    os.system("python3 /home/pi/nsa/snowden.py &")
+
+    os.system("python3 /home/pi/RaspberryPiSurveillance/snowden.py &")
 
     global isRunning
     isRunning = True

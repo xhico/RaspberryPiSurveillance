@@ -31,8 +31,8 @@ def main():
 
     if debug:
         print("Kill nsa")
-    os.system('kill $(ps ax | grep \'python3 /home/pi/nsa/nsa.py\' | grep -v grep | awk \'{print $1}\')')
-    os.system('kill $(ps ax | grep \'python3 /home/pi/nsa/snowden.py\' | grep -v grep | awk \'{print $1}\')')
+    os.system('kill $(ps ax | grep \'python3 /home/pi/RaspberryPiSurveillance/nsa.py\' | grep -v grep | awk \'{print $1}\')')
+    os.system('kill $(ps ax | grep \'python3 /home/pi/RaspberryPiSurveillance/snowden.py\' | grep -v grep | awk \'{print $1}\')')
 
     picFile = "pic_" + str(time.strftime('%Y-%m-%d_%H-%M-%S')) + ".jpg"
 
@@ -48,7 +48,7 @@ def main():
 
     if debug:
         print("Start nsa")
-    os.system("python3 /home/pi/nsa/nsa.py &")
+    os.system("python3 /home/pi/RaspberryPiSurveillance/nsa.py &")
 
 
 if __name__ == '__main__':

@@ -21,22 +21,22 @@ def get911(key):
     data = json.load(f)
     f.close()
     return data[key]
-    
 
-REC_WIDTH = 640              # video width
-REC_HEIGHT = 480             # video height
-REC_FRAMERATE = 24           # the recording framerate
-REC_SECONDS = 10             # number of seconds before and after motion
-REC_BITRATE = 500000         # bitrate for H.264 encoder
-REC_ROTATION = 180           # rotation
-FILE_BUFFER = 548576         # the size of the file buffer (bytes)
 
-MOTION_MAGNITUDE = 65        # the magnitude of vectors required for motion
-MOTION_VECTORS = 5           # the number of vectors required to detect motion
+REC_WIDTH = 640  # video width
+REC_HEIGHT = 480  # video height
+REC_FRAMERATE = 24  # the recording framerate
+REC_SECONDS = 10  # number of seconds before and after motion
+REC_BITRATE = 500000  # bitrate for H.264 encoder
+REC_ROTATION = 180  # rotation
+FILE_BUFFER = 548576  # the size of the file buffer (bytes)
 
-EMAIL_SENDER = get911('EMAIL_USER')          # email account that sends the email
-EMAIL_PASSWORD = get911('EMAIL_APPPW')        # password for the email sender account
-EMAIL_RECEIVER = get911('EMAIL_RECEIVER')    # email to send the video
+MOTION_MAGNITUDE = 65  # the magnitude of vectors required for motion
+MOTION_VECTORS = 5  # the number of vectors required to detect motion
+
+EMAIL_SENDER = get911('EMAIL_USER')  # email account that sends the email
+EMAIL_PASSWORD = get911('EMAIL_APPPW')  # password for the email sender account
+EMAIL_RECEIVER = get911('EMAIL_RECEIVER')  # email to send the video
 
 
 class MotionDetector(picamera.array.PiMotionAnalysis):
