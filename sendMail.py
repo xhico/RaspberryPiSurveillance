@@ -2,13 +2,10 @@
 # !/usr/bin/python3
 
 import datetime
-import json
 import os
 import traceback
-
 import yagmail
 import sys
-
 import RaspberryPiSurveillance
 
 EMAIL_USER = RaspberryPiSurveillance.EMAIL_USER
@@ -17,23 +14,15 @@ EMAIL_APPPW = RaspberryPiSurveillance.EMAIL_APPPW
 
 
 def main():
-    # Get REC_FILE && Set MP4_File
+    # Get REC_FILE && Set REC_DATE
     REC_FILE = sys.argv[1]
     print("REC_FILE:", REC_FILE)
-    MP4_FILE = REC_FILE.replace(".h264", ".mp4")
-    print("MP4_FILE:", MP4_FILE)
-    REC_DATE = os.path.basename(MP4_FILE).replace(".mp4", "")
-
-    # Convert H264 -> MP4
-    print("MP4Box")
-    cmd = " ".join(["MP4Box", "-quiet", "-add", REC_FILE, MP4_FILE])
-    os.system(cmd)
-    os.remove(REC_FILE)
+    REC_DATE = os.path.basename(REC_FILE).replace(".mp4", "")
 
     # Send email
     print("Send Email")
     subject = "EYE - " + REC_DATE
-    # yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, subject, subject, MP4_FILE)
+    # yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, subject, subject, REC_FILE)
     yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, subject, subject)
 
 

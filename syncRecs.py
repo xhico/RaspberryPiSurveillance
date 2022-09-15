@@ -73,7 +73,7 @@ def main():
     elif len(procs) != 0 and not START_DATE <= now <= END_DATE:
         print("RUNNING && SHOULDN'T BE -> KILL")
         for proc in procs:
-            print(proc.kill())
+            proc.kill()
         writeLog(now.strftime("%Y/%m/%d %H:%M:%S"))
         writeLog("Stopped")
         writeLog("----------------------------------------------------\n")
