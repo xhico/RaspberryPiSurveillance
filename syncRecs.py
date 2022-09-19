@@ -3,6 +3,7 @@
 
 import os
 import datetime
+import subprocess
 import traceback
 
 import psutil
@@ -13,12 +14,30 @@ import RaspberryPiSurveillance
 EMAIL_USER = RaspberryPiSurveillance.EMAIL_USER
 EMAIL_RECEIVER = RaspberryPiSurveillance.EMAIL_RECEIVER
 EMAIL_APPPW = RaspberryPiSurveillance.EMAIL_APPPW
+MAC_ADDR = RaspberryPiSurveillance.MAC_ADDR
 START_DATE = RaspberryPiSurveillance.START_DATE
 END_DATE = RaspberryPiSurveillance.END_DATE
 writeLog = RaspberryPiSurveillance.writeLog
 RECORDINGS_FOLDER = RaspberryPiSurveillance.RECORDINGS_FOLDER
 TODAY_FOLDER = RaspberryPiSurveillance.TODAY_FOLDER
 SCRIPT_FOLDER = RaspberryPiSurveillance.SCRIPT_FOLDER
+
+
+def checkiXhico():
+    print("Detect iXhico")
+    process = subprocess.getoutput(" ".join(['sudo', 'l2ping', '-c', '1', MAC_ADDR])).splitlines()
+    check = next((False for elem in process if "Host is down" in elem), True)
+    return check
+
+
+def runMain():
+    cmd = " ".join(["python3", os.path.join(SCRIPT_FOLDER, "RaspberryPiSurveillance.py"), ">", "/dev/null", "&"])
+    os.system(cmd)
+
+
+def killMain(procs):
+    for proc in procs:
+        proc.kill()
 
 
 def main():
@@ -60,25 +79,29 @@ def main():
         print(ogFullPath)
         print(newFullPath)
 
+    # Check for iXhico
+    iXhico = checkiXhico()
+
     # Check if Main script is running
     procs = [proc for proc in psutil.process_iter(attrs=["cmdline"]) if "RaspberryPiSurveillance.py" in '\t'.join(proc.info["cmdline"])]
-    if len(procs) == 0 and START_DATE <= now <= END_DATE:
-        print("NOT RUNNING && SHOULD BE -> RUN")
-        cmd = " ".join(["python3", os.path.join(SCRIPT_FOLDER, "RaspberryPiSurveillance.py"), ">", "/dev/null", "&"])
-        os.system(cmd)
-    elif len(procs) == 0 and not START_DATE <= now <= END_DATE:
-        print("NOT RUNNING && SHOULDN'T BE -> NOTHING")
-    elif len(procs) != 0 and START_DATE <= now <= END_DATE:
-        print("RUNNING && SHOULD BE -> CONTINUE")
-    elif len(procs) != 0 and not START_DATE <= now <= END_DATE:
-        print("RUNNING && SHOULDN'T BE -> KILL")
-        for proc in procs:
-            proc.kill()
-        writeLog(now.strftime("%Y/%m/%d %H:%M:%S"))
-        writeLog("Stopped")
-        writeLog("----------------------------------------------------\n")
+    isRunning = True if len(procs) != 0 else False
+    isTime = START_DATE <= now <= END_DATE
+
+    if iXhico and isTime and not isRunning:
+        print("iXhico && isTime && NOT running -> RUN")
+        runMain()
+    elif iXhico and not isTime and isRunning:
+        print("iXhico && NOT isTime && isRunning - KILL")
+        killMain(procs)
+    elif not iXhico and isTime and not isRunning:
+        print("NOT iXhico && isTime && NOT isRunning -> RUN")
+        runMain()
+    elif not iXhico and not isTime and not isRunning:
+        print("NOT iXhico && NOT isTime && NOT isRunning -> RUN")
+        runMain()
     else:
-        print("ELSE")
+        print("iXhico", iXhico, "|", "isRunning", isRunning, "|", "isTime", isTime)
+        print("nothing to do")
 
 
 if __name__ == '__main__':

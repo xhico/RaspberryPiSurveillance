@@ -20,6 +20,7 @@ def get911(key):
 EMAIL_USER = get911('EMAIL_USER')
 EMAIL_APPPW = get911('EMAIL_APPPW')
 EMAIL_RECEIVER = get911('EMAIL_RECEIVER')
+MAC_ADDR = get911('BLUETOOTH_ADDRESS')
 NOW = datetime.datetime.now()
 START_DATE = datetime.datetime(NOW.year, NOW.month, NOW.day, 1, 30, 00)
 END_DATE = datetime.datetime(NOW.year, NOW.month, NOW.day, 8, 30, 00)
