@@ -79,13 +79,12 @@ def main():
         print(ogFullPath)
         print(newFullPath)
 
-    # Check for iXhico
-    iXhico = checkiXhico()
-
     # Check if Main script is running
     procs = [proc for proc in psutil.process_iter(attrs=["cmdline"]) if "RaspberryPiSurveillance.py" in '\t'.join(proc.info["cmdline"])]
     isRunning = True if len(procs) != 0 else False
     isTime = START_DATE <= now <= END_DATE
+    # iXhico = checkiXhico()
+    iXhico = True
 
     if iXhico and isTime and not isRunning:
         print("iXhico && isTime && NOT running -> RUN")
@@ -93,12 +92,12 @@ def main():
     elif iXhico and not isTime and isRunning:
         print("iXhico && NOT isTime && isRunning - KILL")
         killMain(procs)
-    elif not iXhico and isTime and not isRunning:
-        print("NOT iXhico && isTime && NOT isRunning -> RUN")
-        runMain()
-    elif not iXhico and not isTime and not isRunning:
-        print("NOT iXhico && NOT isTime && NOT isRunning -> RUN")
-        runMain()
+    # elif not iXhico and isTime and not isRunning:
+    #     print("NOT iXhico && isTime && NOT isRunning -> RUN")
+    #     runMain()
+    # elif not iXhico and not isTime and not isRunning:
+    #     print("NOT iXhico && NOT isTime && NOT isRunning -> RUN")
+    #     runMain()
     else:
         print("iXhico", iXhico, "|", "isRunning", isRunning, "|", "isTime", isTime)
         print("nothing to do")
