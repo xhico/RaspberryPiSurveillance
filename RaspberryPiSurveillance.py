@@ -4,7 +4,8 @@
 
 import json
 import os
-import time
+import logging
+import traceback
 
 import gpiozero
 import datetime
@@ -28,7 +29,6 @@ END_DATE = datetime.datetime(NOW.year, NOW.month, NOW.day, 8, 30, 00)
 # END_DATE = datetime.datetime(NOW.year, NOW.month, NOW.day, 23, 59, 59)
 
 SCRIPT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-LOG_FILE = os.path.join(SCRIPT_FOLDER, os.path.basename(os.path.abspath(__file__)).replace(".py", ".log"))
 RECORDINGS_FOLDER = os.path.join(SCRIPT_FOLDER, "_RECORDINGS")
 TODAY_FOLDER = os.path.join(RECORDINGS_FOLDER, "_TODAY")
 REC_FILE = None
@@ -36,15 +36,9 @@ REC_FILE = None
 PIR = gpiozero.MotionSensor(26)
 
 
-def writeLog(line):
-    print(line)
-    with open(LOG_FILE, "a") as outFile:
-        outFile.write(line + "\n")
-
-
 def on_motion():
     now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    writeLog(now + " " + "Motion detected!")
+    logger.info("Motion detected!")
 
     # Rec for x seconds
     global REC_FILE
@@ -54,15 +48,14 @@ def on_motion():
 
 
 def off_motion():
-    now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    writeLog(now + " " + "Motion Stopped\n")
+    logger.info("Motion Stopped")
 
     # Run sendMail
-    sendMail_LOG_FILE = os.path.join(SCRIPT_FOLDER, "sendMail.log")
-    cmd = " ".join(["python3", os.path.join(SCRIPT_FOLDER, "sendMail.py"), REC_FILE, ">>", sendMail_LOG_FILE, "&"])
+    global SCRIPT_FOLDER
+    cmd = " ".join(["python3", os.path.join(SCRIPT_FOLDER, "sendMail.py"), REC_FILE, "&"])
     os.system(cmd)
 
-    writeLog("Waiting for motion\n")
+    logger.info("Waiting for motion")
 
 
 def main():
@@ -73,21 +66,24 @@ def main():
         os.mkdir(TODAY_FOLDER)
 
     # GO GO GO
-    writeLog("Waiting for motion\n")
+    logger.info("Waiting for motion")
     while True:
         PIR.when_motion = on_motion
         PIR.when_no_motion = off_motion
 
 
 if __name__ == '__main__':
-    # Init
-    writeLog("----------------------------------------------------")
-    writeLog(datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+    # Set Logging
+    LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.path.abspath(__file__).replace(".py", ".log"))
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", handlers=[logging.FileHandler(LOG_FILE), logging.StreamHandler()])
+    logger = logging.getLogger()
+
+    logger.info("----------------------------------------------------")
 
     # Main
     try:
         main()
     except Exception as ex:
-        print(ex)
+        logger.error(traceback.format_exc())
     finally:
-        print("End")
+        logger.info("End")
