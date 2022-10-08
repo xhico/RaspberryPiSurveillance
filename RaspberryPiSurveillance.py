@@ -6,16 +6,11 @@ import json
 import os
 import logging
 import traceback
-
+import base64
 import gpiozero
 import datetime
 from picamera2 import Picamera2
-
-
-def get911(key):
-    with open('/home/pi/.911') as f:
-        data = json.load(f)
-    return data[key]
+from Misc import get911
 
 
 EMAIL_USER = get911('EMAIL_USER')
