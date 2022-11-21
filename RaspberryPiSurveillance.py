@@ -39,6 +39,7 @@ def on_motion():
     global REC_FILE
     REC_FILE = os.path.join(TODAY_FOLDER, now + ".mp4")
     with Picamera2() as camera:
+        camera.configure(camera.create_video_configuration(main={"size": (1920, 1080)}))
         camera.start_and_record_video(REC_FILE, duration=10)
 
 
