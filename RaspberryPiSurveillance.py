@@ -2,16 +2,13 @@
 # !/usr/bin/python3
 
 
-import json
 import os
 import logging
 import traceback
-import base64
 import gpiozero
 import datetime
 from picamera2 import Picamera2
 from Misc import get911
-
 
 EMAIL_USER = get911('EMAIL_USER')
 EMAIL_APPPW = get911('EMAIL_APPPW')
