@@ -16,7 +16,7 @@ EMAIL_RECEIVER = get911('EMAIL_RECEIVER')
 MAC_ADDR = get911('BLUETOOTH_ADDRESS')
 NOW = datetime.datetime.now()
 START_DATE = datetime.datetime(NOW.year, NOW.month, NOW.day, 0, 30, 00)
-END_DATE = datetime.datetime(NOW.year, NOW.month, NOW.day, 8, 30, 00)
+END_DATE = datetime.datetime(NOW.year, NOW.month, NOW.day, 8, 00, 00)
 # START_DATE = datetime.datetime(NOW.year, NOW.month, NOW.day, 0, 0, 0)
 # END_DATE = datetime.datetime(NOW.year, NOW.month, NOW.day, 23, 59, 59)
 
