@@ -2,11 +2,13 @@
 # !/usr/bin/python3
 
 import os
+import random
 import traceback
 import yagmail
 import sys
 import logging
 import RaspberryPiSurveillance
+from moviepy.editor import VideoFileClip
 
 
 def main():
@@ -19,6 +21,11 @@ def main():
     logger.info("Send Email")
     subject = "EYE - " + REC_DATE
     yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, subject, subject)
+
+    # Generate thumbnail
+    clip = VideoFileClip(REC_FILE)
+    clip.save_frame(REC_FILE.replace(".mp4", ".png"), t=random.random() * clip.duration)
+    clip.reader.close()
 
 
 if __name__ == '__main__':

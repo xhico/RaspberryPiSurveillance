@@ -7,7 +7,7 @@ import traceback
 import logging
 import psutil
 import yagmail
-
+from moviepy.editor import VideoFileClip
 import RaspberryPiSurveillance
 
 EMAIL_USER = RaspberryPiSurveillance.EMAIL_USER
@@ -31,6 +31,17 @@ def killMain(procs):
         proc.kill()
 
 
+def is_valid_mp4(file_path):
+    try:
+        # Load the video clip (this will check if the file is readable)
+        video_clip = VideoFileClip(file_path)
+        video_duration = video_clip.duration
+        video_clip.reader.close()
+        return True
+    except Exception as e:
+        return False
+
+
 def main():
     # Check if FOLDERS exist
     logger.info("Check RECORDINGS_FOLDER && TODAY_FOLDER")
@@ -46,7 +57,7 @@ def main():
     # Get all files inside TODAY_FOLDER
     logger.info("Get files inside TODAY_FOLDER")
     onlyFiles = filter(lambda x: os.path.isfile(os.path.join(TODAY_FOLDER, x)), os.listdir(TODAY_FOLDER))
-    onlyFiles = [file for file in onlyFiles if file.endswith(".mp4") and nowDay not in file]
+    onlyFiles = [file for file in onlyFiles if (file.endswith(".mp4") or file.endswith(".png")) and nowDay not in file]
     onlyFiles = sorted(onlyFiles)
 
     # Iterate over every file
@@ -63,9 +74,15 @@ def main():
         if not os.path.exists(dayFolder):
             os.mkdir(dayFolder)
 
-        # Move file from today folder to dayFolder
+        # Set filenames
         ogFullPath = os.path.join(TODAY_FOLDER, file)
         newFullPath = os.path.join(dayFolder, file)
+
+        # Check if file is valid
+        if not is_valid_mp4(ogFullPath):
+            continue
+
+        # Move file from today folder to dayFolder
         os.rename(ogFullPath, newFullPath)
         logger.info(ogFullPath)
         logger.info(newFullPath)
