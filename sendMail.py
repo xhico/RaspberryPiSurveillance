@@ -7,6 +7,7 @@ import traceback
 import yagmail
 import sys
 import logging
+from PIL import Image
 import RaspberryPiSurveillance
 from moviepy.editor import VideoFileClip
 
@@ -23,9 +24,11 @@ def main():
     yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, subject, subject)
 
     # Generate thumbnail
-    clip = VideoFileClip(REC_FILE)
-    clip.save_frame(REC_FILE.replace(".mp4", ".png"), t=random.random() * clip.duration)
-    clip.reader.close()
+    # Generate a random timestamp to extract a frame
+    with VideoFileClip(REC_FILE) as clip:
+        thumbnail_img = Image.fromarray(clip.get_frame(random.random() * clip.duration))
+        thumbnail_img.thumbnail((int(clip.w / (clip.h / 240)), int(clip.h / (clip.h / 240))))
+        thumbnail_img.save(REC_FILE.replace(".mp4", ".png"), optimize=True)
 
 
 if __name__ == '__main__':
