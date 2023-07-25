@@ -22,7 +22,7 @@ END_DATE = datetime.datetime(NOW.year, NOW.month, NOW.day, 8, 00, 00)
 
 SCRIPT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 RECORDINGS_FOLDER = os.path.join(SCRIPT_FOLDER, "_RECORDINGS")
-TODAY_FOLDER = os.path.join(RECORDINGS_FOLDER, "_TODAY")
+TODAY_FOLDER = os.path.join(RECORDINGS_FOLDER, datetime.datetime.now().strftime("%Y-%m-%d"))
 REC_FILE = None
 
 PIR = gpiozero.MotionSensor(26)
