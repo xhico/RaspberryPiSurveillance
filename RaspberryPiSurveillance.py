@@ -52,7 +52,7 @@ def on_motion():
         os.mkdir(day_folder)
 
     # Record
-    logger.info("Recording video to " + REC_FILE + "...")
+    logger.info("Recording video to " + os.path.basename(REC_FILE))
     camera.configure(camera.create_video_configuration(main={"size": REC_SIZE}))
     camera.start_and_record_video(REC_FILE, duration=10)
 
@@ -89,7 +89,8 @@ def main():
     motion while the script is running.
 
     """
-    logger.info("Motion detection program started. Press Ctrl+C to exit.")
+
+    logger.info("Motion detection program started")
     while True:
         motion_sensor.when_motion = on_motion
         motion_sensor.when_no_motion = off_motion
