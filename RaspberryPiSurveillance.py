@@ -1,68 +1,101 @@
 # -*- coding: utf-8 -*-
 # !/usr/bin/python3
 
-
+import datetime
 import os
 import logging
+import random
+import time
 import traceback
-import gpiozero
-import datetime
-from picamera2 import Picamera2
+import yagmail
+from PIL import Image
 from Misc import get911
+from picamera2 import Picamera2
+from gpiozero import MotionSensor
+from moviepy.editor import VideoFileClip
 
+# Load email and configuration data from an external source
 EMAIL_USER = get911('EMAIL_USER')
 EMAIL_APPPW = get911('EMAIL_APPPW')
 EMAIL_RECEIVER = get911('EMAIL_RECEIVER')
-MAC_ADDR = get911('BLUETOOTH_ADDRESS')
-NOW = datetime.datetime.now()
-START_DATE = datetime.datetime(NOW.year, NOW.month, NOW.day, 0, 30, 00)
-END_DATE = datetime.datetime(NOW.year, NOW.month, NOW.day, 8, 00, 00)
-# START_DATE = datetime.datetime(NOW.year, NOW.month, NOW.day, 0, 0, 0)
-# END_DATE = datetime.datetime(NOW.year, NOW.month, NOW.day, 23, 59, 59)
 
+# Define the script's and recording folder paths
 SCRIPT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 RECORDINGS_FOLDER = os.path.join(SCRIPT_FOLDER, "_RECORDINGS")
-TODAY_FOLDER = os.path.join(RECORDINGS_FOLDER, datetime.datetime.now().strftime("%Y-%m-%d"))
-REC_FILE = None
 
-PIR = gpiozero.MotionSensor(26)
+# Create a MotionSensor object on the specified pin (GPIO pin 26)
+motion_sensor = MotionSensor(26)
+
+# Create a PiCamera object
+camera = Picamera2()
+REC_SIZE = (1920, 1080)
+REC_FILE = ""
 
 
 def on_motion():
-    now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    """Callback function when motion is detected.
+
+    This function is called when the motion sensor detects motion. It records a 5-second video and saves it
+    to the RECORDINGS_FOLDER with a filename based on the current date and time.
+
+    """
     logger.info("Motion detected!")
 
-    # Rec for x seconds
     global REC_FILE
-    REC_FILE = os.path.join(TODAY_FOLDER, now + ".mp4")
-    with Picamera2() as camera:
-        camera.configure(camera.create_video_configuration(main={"size": (1920, 1080)}))
-        camera.start_and_record_video(REC_FILE, duration=10)
+    timestamp = datetime.datetime.now().strftime("%H-%M-%S")
+    day = datetime.datetime.now().strftime("%Y-%m-%d")
+    REC_FILE = os.path.join(RECORDINGS_FOLDER, day, day + "_" + timestamp + ".mp4")
+
+    # Create day_folder if not exists
+    day_folder = os.path.dirname(REC_FILE)
+    if not os.path.exists(day_folder):
+        os.mkdir(day_folder)
+
+    # Record
+    logger.info("Recording video to " + REC_FILE + "...")
+    camera.configure(camera.create_video_configuration(main={"size": REC_SIZE}))
+    camera.start_and_record_video(REC_FILE, duration=10)
 
 
 def off_motion():
-    logger.info("Motion Stopped")
+    """Callback function when motion is no longer detected.
 
-    # Run sendMail
-    global SCRIPT_FOLDER
-    cmd = " ".join(["python3", os.path.join(SCRIPT_FOLDER, "sendMail.py"), REC_FILE, "&"])
-    os.system(cmd)
+    This function is called when the motion sensor stops detecting motion. It stops the video recording, sends
+    an email notification with the video timestamp to the specified receiver, and generates a thumbnail image
+    from the recorded video.
 
-    logger.info("Waiting for motion")
+    """
+    logger.info("No motion detected.")
+    camera.stop_recording()
+    logger.info("Video recording stopped.")
+
+    global REC_FILE
+    REC_DATE = os.path.basename(REC_FILE).replace(".mp4", "")
+    yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, "EYE - " + REC_DATE, "Motion detected at " + REC_DATE)
+    logger.info("Email notification sent successfully.")
+
+    # Generate thumbnail
+    with VideoFileClip(REC_FILE) as clip:
+        thumbnail_img = Image.fromarray(clip.get_frame(random.random() * clip.duration))
+        thumbnail_img.thumbnail((int(clip.w / (clip.h / 240)), int(clip.h / (clip.h / 240))))
+        thumbnail_img.save(REC_FILE.replace(".mp4", ".png"), optimize=True)
 
 
 def main():
-    # Check if FOLDERS exist
-    if not os.path.exists(RECORDINGS_FOLDER):
-        os.mkdir(RECORDINGS_FOLDER)
-    if not os.path.exists(TODAY_FOLDER):
-        os.mkdir(TODAY_FOLDER)
+    """Main function for motion detection.
 
-    # GO GO GO
-    logger.info("Waiting for motion")
+    This function sets up the motion_sensor object to call the on_motion() and off_motion() callback functions
+    when motion is detected and when motion stops, respectively. It then enters a loop to continuously check for
+    motion while the script is running.
+
+    """
+    logger.info("Motion detection program started. Press Ctrl+C to exit.")
     while True:
-        PIR.when_motion = on_motion
-        PIR.when_no_motion = off_motion
+        motion_sensor.when_motion = on_motion
+        motion_sensor.when_no_motion = off_motion
+
+        # You can add other code or actions here while the motion detection runs.
+        time.sleep(1)  # Pause to reduce CPU usage
 
 
 if __name__ == '__main__':
