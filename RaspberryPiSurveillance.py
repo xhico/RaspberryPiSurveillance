@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # !/usr/bin/python3
 
-# python3 -m pip install yagmail moviepy gpiozero picamera2 --no-cache-dir
-# mkdir -p /home/pi/RaspberryPiSurveillance/_RECORDINGS
 
 import datetime
 import os
