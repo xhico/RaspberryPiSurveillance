@@ -3,6 +3,7 @@
 
 
 import datetime
+import json
 import os
 import logging
 import random
@@ -14,23 +15,6 @@ from Misc import get911, sendErrorEmail
 from picamera2 import Picamera2
 from gpiozero import MotionSensor
 from moviepy.editor import VideoFileClip
-
-# Load email and configuration data from an external source
-EMAIL_USER = get911('EMAIL_USER')
-EMAIL_APPPW = get911('EMAIL_APPPW')
-EMAIL_RECEIVER = get911('EMAIL_RECEIVER')
-
-# Define the script's and recording folder paths
-SCRIPT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-RECORDINGS_FOLDER = os.path.join(SCRIPT_FOLDER, "_RECORDINGS")
-
-# Create a MotionSensor object on the specified pin (GPIO pin 26)
-motion_sensor = MotionSensor(26)
-
-# Create a PiCamera object
-camera = Picamera2()
-REC_SIZE = (1920, 1080)
-REC_FILE = ""
 
 
 def on_motion():
@@ -107,6 +91,30 @@ if __name__ == '__main__':
     logger = logging.getLogger()
 
     logger.info("----------------------------------------------------")
+
+    # Load Config File
+    configFile = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
+    with open(configFile, "r") as inFile:
+        config = json.loads(inFile.read())
+
+    # Load email and configuration data from an external source
+    EMAIL_USER = get911('EMAIL_USER')
+    EMAIL_APPPW = get911('EMAIL_APPPW')
+    EMAIL_RECEIVER = get911('EMAIL_RECEIVER')
+
+    # Define the script's and recording folder paths
+    SCRIPT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+    RECORDINGS_FOLDER = os.path.join(SCRIPT_FOLDER, "_RECORDINGS")
+
+    # Create a MotionSensor object on the specified GPIO pin
+    logger.info("Setting MotionSensor")
+    motion_sensor = MotionSensor(config["MOTION_SENSOR_GPIO_PIN"])
+
+    # Create a PiCamera object
+    logger.info("Setting PiCamera")
+    camera = Picamera2()
+    REC_SIZE = (config["VIDEO_WIDTH"], config["VIDEO_HEIGHT"])
+    REC_FILE = ""
 
     # Main
     try:
