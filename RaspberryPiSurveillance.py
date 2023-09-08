@@ -9,9 +9,8 @@ import logging
 import random
 import time
 import traceback
-import yagmail
 from PIL import Image
-from Misc import get911, sendErrorEmail
+from Misc import get911, sendEmail
 from picamera2 import Picamera2
 from gpiozero import MotionSensor
 from moviepy.editor import VideoFileClip
@@ -56,7 +55,7 @@ def off_motion():
 
     global REC_FILE
     REC_DATE = os.path.basename(REC_FILE).replace(".mp4", "")
-    yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, "EYE - " + REC_DATE, "Motion detected at " + REC_DATE)
+    sendEmail("EYE - " + REC_DATE, "Motion detected at " + REC_DATE)
     logger.info("Email notification sent successfully.")
 
     # Generate thumbnail
@@ -121,6 +120,6 @@ if __name__ == '__main__':
         main()
     except Exception as ex:
         logger.error(traceback.format_exc())
-        sendErrorEmail(os.path.basename(__file__), str(traceback.format_exc()))
+        sendEmail(os.path.basename(__file__), str(traceback.format_exc()))
     finally:
         logger.info("End")
