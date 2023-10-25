@@ -96,11 +96,6 @@ if __name__ == '__main__':
     with open(configFile, "r") as inFile:
         config = json.loads(inFile.read())
 
-    # Load email and configuration data from an external source
-    EMAIL_USER = get911('EMAIL_USER')
-    EMAIL_APPPW = get911('EMAIL_APPPW')
-    EMAIL_RECEIVER = get911('EMAIL_RECEIVER')
-
     # Define the script's and recording folder paths
     SCRIPT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)))
     RECORDINGS_FOLDER = os.path.join(SCRIPT_FOLDER, "_RECORDINGS")
