@@ -7,13 +7,14 @@ import json
 import os
 import logging
 import random
-import time
 import traceback
 from PIL import Image
 from Misc import get911, sendEmail
-from picamera2 import Picamera2
 from gpiozero import MotionSensor
 from moviepy.editor import VideoFileClip
+import time
+from picamera2 import Picamera2
+from moviepy.editor import ImageSequenceClip
 
 
 def on_motion():
@@ -65,7 +66,7 @@ def off_motion():
         thumbnail_img.save(REC_FILE.replace(".mp4", ".png"), optimize=True)
 
 
-def main():
+def withMotionSensor():
     """Main function for motion detection.
 
     This function sets up the motion_sensor object to call the on_motion() and off_motion() callback functions
@@ -75,12 +76,59 @@ def main():
     """
 
     logger.info("Motion detection program started")
+    motion_sensor = MotionSensor(MOTION_SENSOR_GPIO_PIN)
     while True:
         motion_sensor.when_motion = on_motion
         motion_sensor.when_no_motion = off_motion
 
         # You can add other code or actions here while the motion detection runs.
         time.sleep(1)  # Pause to reduce CPU usage
+
+
+def basicSystem():
+    global REC_FILE
+    camera.configure(camera.create_still_configuration(main={"size": REC_SIZE}))
+    camera.start()
+    time.sleep(1)
+
+    while True:
+        current_time = datetime.datetime.now()
+        day = current_time.strftime("%Y-%m-%d")
+        timestamp = current_time.strftime("%H-%M-%S")
+
+        # Take a picture every 10 seconds
+        if current_time.second % 10 == 0:
+            picture_file = os.path.join(RECORDINGS_FOLDER, day, day + "_" + timestamp + ".jpg")
+            day_folder = os.path.dirname(picture_file)
+            if not os.path.exists(day_folder):
+                os.mkdir(day_folder)
+            camera.capture_file(picture_file)
+
+        # Convert photos to a video at the end of every hour
+        if current_time.minute == 55 and current_time.second == 0:
+            pictures_folder = os.path.join(RECORDINGS_FOLDER, day)
+            [os.remove(os.path.join(pictures_folder, filename)) for filename in os.listdir(pictures_folder) if filename.startswith("._")]
+            picture_files = sorted([f for f in os.listdir(pictures_folder) if f.endswith(".jpg")])
+            if len(picture_files) > 0:
+                REC_FILE = os.path.join(RECORDINGS_FOLDER, day, day + "_" + timestamp + ".mp4")
+                image_sequence = [os.path.join(pictures_folder, f) for f in picture_files]
+                clip = ImageSequenceClip(image_sequence, fps=1)
+                clip.write_videofile(REC_FILE)
+                logger.info("Photos converted to video and saved to " + os.path.basename(REC_FILE))
+                [os.remove(os.path.join(pictures_folder, filename)) for filename in picture_files]
+
+        time.sleep(1)
+
+
+def main():
+    if MOTION_SENSOR_GPIO_PIN:
+        logger.info("Starting MotionSensor System")
+        withMotionSensor()
+    else:
+        logger.info("Starting Basic System")
+        basicSystem()
+
+    return
 
 
 if __name__ == '__main__':
@@ -100,21 +148,21 @@ if __name__ == '__main__':
     SCRIPT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)))
     RECORDINGS_FOLDER = os.path.join(SCRIPT_FOLDER, "_RECORDINGS")
 
-    # Create a MotionSensor object on the specified GPIO pin
-    logger.info("Setting MotionSensor")
-    motion_sensor = MotionSensor(config["MOTION_SENSOR_GPIO_PIN"])
+    # Use MotionSensor if available, else use BasicSystem
+    MOTION_SENSOR_GPIO_PIN = config["MOTION_SENSOR_GPIO_PIN"]
 
     # Create a PiCamera object
     logger.info("Setting PiCamera")
-    camera = Picamera2()
     REC_SIZE = (config["VIDEO_WIDTH"], config["VIDEO_HEIGHT"])
     REC_FILE = ""
+    camera = Picamera2()
+    Picamera2.set_logging(Picamera2.WARNING)
 
     # Main
     try:
         main()
     except Exception as ex:
         logger.error(traceback.format_exc())
-        sendEmail(os.path.basename(__file__), str(traceback.format_exc()))
+        # sendEmail(os.path.basename(__file__), str(traceback.format_exc()))
     finally:
         logger.info("End")
