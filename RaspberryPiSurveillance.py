@@ -15,6 +15,7 @@ from moviepy.editor import VideoFileClip
 import time
 from picamera2 import Picamera2
 from moviepy.editor import ImageSequenceClip
+from sense_hat import SenseHat
 
 
 def on_motion():
@@ -85,7 +86,34 @@ def withMotionSensor():
         time.sleep(1)  # Pause to reduce CPU usage
 
 
+def setSenseHat():
+    # Define colors
+    r = (255, 0, 0)  # Red
+    b = (0, 0, 0)  # Black
+
+    # Define a recording symbol in a 8x8 matrix
+    recording_symbol = [
+        b, b, b, b, b, b, b, b,
+        b, b, b, r, r, b, b, b,
+        b, b, r, r, r, r, b, b,
+        b, r, r, r, r, r, r, b,
+        b, r, r, r, r, r, r, b,
+        b, b, r, r, r, r, b, b,
+        b, b, b, r, r, b, b, b,
+        b, b, b, b, b, b, b, b,
+    ]
+
+    # Display the recording symbol
+    sense.set_pixels(recording_symbol)
+
+    return
+
+
 def basicSystem():
+    # Show SenseHat
+    setSenseHat()
+
+    # Start camera
     global REC_FILE
     camera.configure(camera.create_still_configuration(main={"size": REC_SIZE}))
     camera.start()
@@ -121,6 +149,7 @@ def basicSystem():
 
 
 def main():
+    # Run Surveillance
     if MOTION_SENSOR_GPIO_PIN:
         logger.info("Starting MotionSensor System")
         withMotionSensor()
@@ -157,6 +186,10 @@ if __name__ == '__main__':
     REC_FILE = ""
     camera = Picamera2()
     Picamera2.set_logging(Picamera2.WARNING)
+
+    # Create SenseHat object
+    sense = SenseHat()
+    sense.set_rotation(180)
 
     # Main
     try:
