@@ -14,8 +14,6 @@ from gpiozero import MotionSensor
 from moviepy.editor import VideoFileClip
 import time
 from picamera2 import Picamera2
-from moviepy.editor import ImageSequenceClip
-from sense_hat import SenseHat
 
 
 def on_motion():
@@ -67,7 +65,7 @@ def off_motion():
         thumbnail_img.save(REC_FILE.replace(".mp4", ".png"), optimize=True)
 
 
-def withMotionSensor():
+def main():
     """Main function for motion detection.
 
     This function sets up the motion_sensor object to call the on_motion() and off_motion() callback functions
@@ -84,80 +82,6 @@ def withMotionSensor():
 
         # You can add other code or actions here while the motion detection runs.
         time.sleep(1)  # Pause to reduce CPU usage
-
-
-def setSenseHat():
-    # Define colors
-    r = (255, 0, 0)  # Red
-    b = (0, 0, 0)  # Black
-
-    # Define a recording symbol in a 8x8 matrix
-    recording_symbol = [
-        b, b, b, b, b, b, b, b,
-        b, b, b, r, r, b, b, b,
-        b, b, r, r, r, r, b, b,
-        b, r, r, r, r, r, r, b,
-        b, r, r, r, r, r, r, b,
-        b, b, r, r, r, r, b, b,
-        b, b, b, r, r, b, b, b,
-        b, b, b, b, b, b, b, b,
-    ]
-
-    # Display the recording symbol
-    sense.set_pixels(recording_symbol)
-
-    return
-
-
-def basicSystem():
-    # Show SenseHat
-    setSenseHat()
-
-    # Start camera
-    global REC_FILE
-    camera.configure(camera.create_still_configuration(main={"size": REC_SIZE}))
-    camera.start()
-    time.sleep(1)
-
-    while True:
-        current_time = datetime.datetime.now()
-        day = current_time.strftime("%Y-%m-%d")
-        timestamp = current_time.strftime("%H-%M-%S")
-
-        # Take a picture every 10 seconds
-        if current_time.second % 10 == 0:
-            picture_file = os.path.join(RECORDINGS_FOLDER, day, day + "_" + timestamp + ".jpg")
-            day_folder = os.path.dirname(picture_file)
-            if not os.path.exists(day_folder):
-                os.mkdir(day_folder)
-            camera.capture_file(picture_file)
-
-        # Convert photos to a video at the end of every hour
-        if current_time.minute == 55 and current_time.second == 0:
-            pictures_folder = os.path.join(RECORDINGS_FOLDER, day)
-            [os.remove(os.path.join(pictures_folder, filename)) for filename in os.listdir(pictures_folder) if filename.startswith("._")]
-            picture_files = sorted([f for f in os.listdir(pictures_folder) if f.endswith(".jpg")])
-            if len(picture_files) > 0:
-                REC_FILE = os.path.join(RECORDINGS_FOLDER, day, day + "_" + timestamp + ".mp4")
-                image_sequence = [os.path.join(pictures_folder, f) for f in picture_files]
-                clip = ImageSequenceClip(image_sequence, fps=1)
-                clip.write_videofile(REC_FILE)
-                logger.info("Photos converted to video and saved to " + os.path.basename(REC_FILE))
-                [os.remove(os.path.join(pictures_folder, filename)) for filename in picture_files]
-
-        time.sleep(1)
-
-
-def main():
-    # Run Surveillance
-    if MOTION_SENSOR_GPIO_PIN:
-        logger.info("Starting MotionSensor System")
-        withMotionSensor()
-    else:
-        logger.info("Starting Basic System")
-        basicSystem()
-
-    return
 
 
 if __name__ == '__main__':
@@ -187,15 +111,11 @@ if __name__ == '__main__':
     camera = Picamera2()
     Picamera2.set_logging(Picamera2.WARNING)
 
-    # Create SenseHat object
-    sense = SenseHat()
-    sense.set_rotation(180)
-
     # Main
     try:
         main()
     except Exception as ex:
         logger.error(traceback.format_exc())
-        # sendEmail(os.path.basename(__file__), str(traceback.format_exc()))
+        sendEmail(os.path.basename(__file__), str(traceback.format_exc()))
     finally:
         logger.info("End")
