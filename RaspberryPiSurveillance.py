@@ -16,6 +16,13 @@ import time
 from picamera2 import Picamera2
 from sense_hat import SenseHat
 
+# Set Logging
+LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.path.abspath(__file__).replace(".py", ".log"))
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", handlers=[logging.FileHandler(LOG_FILE), logging.StreamHandler()])
+logger = logging.getLogger()
+
+sense = SenseHat()
+
 
 def on_motion():
     """Callback function when motion is detected.
@@ -81,6 +88,7 @@ def main():
     """
 
     logger.info("Motion detection program started")
+    sense.clear()
     motion_sensor = MotionSensor(MOTION_SENSOR_GPIO_PIN)
     while True:
         motion_sensor.when_motion = on_motion
@@ -91,10 +99,6 @@ def main():
 
 
 if __name__ == '__main__':
-    # Set Logging
-    LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.path.abspath(__file__).replace(".py", ".log"))
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", handlers=[logging.FileHandler(LOG_FILE), logging.StreamHandler()])
-    logger = logging.getLogger()
 
     logger.info("----------------------------------------------------")
 
@@ -110,15 +114,12 @@ if __name__ == '__main__':
     # Use MotionSensor if available, else use BasicSystem
     MOTION_SENSOR_GPIO_PIN = config["MOTION_SENSOR_GPIO_PIN"]
 
-    # Create a PiCamera object && SenseHat
+    # Create a PiCamera object
     logger.info("Setting PiCamera")
     VIDEO_FILE = ""
     VIDEO_SIZE = (config["VIDEO_WIDTH"], config["VIDEO_HEIGHT"])
     VIDEO_DURATION = config["VIDEO_DURATION"]
     camera = Picamera2()
-    Picamera2.set_logging(Picamera2.WARNING)
-    sense = SenseHat()
-    sense.clear()
 
     # Main
     try:

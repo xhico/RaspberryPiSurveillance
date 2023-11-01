@@ -6,6 +6,8 @@ After=network.target
 User=pi
 WorkingDirectory=/home/pi/RaspberryPiSurveillance/
 ExecStart=/usr/bin/python3 /home/pi/RaspberryPiSurveillance/RaspberryPiSurveillance.py
+ExecStop=/usr/bin/python3 /home/pi/RaspberryPiSurveillance/Cleanup.py
+
 Restart=on-failure
 
 [Install]
