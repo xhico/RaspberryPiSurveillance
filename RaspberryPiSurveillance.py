@@ -38,12 +38,13 @@ def on_motion():
     """
     logger.info("Motion detected!")
 
+    global VIDEO_FILE, RECORDING
+
     # Light the matrix
     if not STEALTH_MODE:
         whiteMatrix = [(255, 255, 255) for _ in range(64)]
         sense.set_pixels(whiteMatrix)
 
-    global VIDEO_FILE
     timestamp = datetime.datetime.now().strftime("%H-%M-%S")
     day = datetime.datetime.now().strftime("%Y-%m-%d")
     VIDEO_FILE = os.path.join(RECORDINGS_FOLDER, day, day + "_" + timestamp + ".mp4")
@@ -54,6 +55,7 @@ def on_motion():
         os.mkdir(day_folder)
 
     # Record
+    RECORDING = True
     logger.info("Recording video to " + os.path.basename(VIDEO_FILE))
     camera.configure(camera.create_video_configuration(main={"size": VIDEO_SIZE}))
     camera.start_and_record_video(VIDEO_FILE, duration=VIDEO_DURATION)
@@ -67,12 +69,14 @@ def off_motion():
     video timestamp to the specified receiver, and generates a thumbnail image from the recorded video.
     """
 
+    global VIDEO_FILE, RECORDING
+
     logger.info("No motion detected.")
     camera.stop_recording()
     sense.clear()
+    RECORDING = False
     logger.info("Video recording stopped.")
 
-    global VIDEO_FILE
     VIDEO_DATE = os.path.basename(VIDEO_FILE).replace(".mp4", "")
     sendEmail("EYE - " + VIDEO_DATE, "Motion detected at " + VIDEO_DATE)
     logger.info("Email notification sent successfully.")
@@ -83,6 +87,29 @@ def off_motion():
         thumbnail_img.thumbnail((int(clip.w / (clip.h / 240)), int(clip.h / (clip.h / 240))))
         thumbnail_img.save(VIDEO_FILE.replace(".mp4", ".png"), optimize=True)
     logger.info("Thumbnail Generated")
+
+
+def getCorner(x, y):
+    """
+    Get the next corner coordinates in a circular pattern.
+
+    Args:
+        x (int): Current x-coordinate.
+        y (int): Current y-coordinate.
+
+    Returns:
+        Tuple[int, int]: New x and y coordinates representing the next corner.
+    """
+    if x == 0 and y == 0:
+        x = 7
+    elif x == 7 and y == 0:
+        y = 7
+    elif x == 7 and y == 7:
+        x = 0
+    else:
+        y = 0
+
+    return x, y
 
 
 def main():
@@ -96,12 +123,26 @@ def main():
     logger.info("Motion detection program started")
     sense.clear()
     motion_sensor = MotionSensor(MOTION_SENSOR_GPIO_PIN)
+    counter, x, y = 0, 0, 0
+
     while True:
+
+        # Light corner
+        if not RECORDING:
+            if counter % 2 == 0:
+                x, y = getCorner(x, y)
+                sense.set_pixel(x, y, (255, 0, 0))
+            else:
+                sense.clear()
+
+        # Check for motion
         motion_sensor.when_motion = on_motion
         motion_sensor.when_no_motion = off_motion
 
         # You can add other code or actions here while the motion detection runs.
         time.sleep(1)  # Pause to reduce CPU usage
+
+        counter += 1
 
 
 if __name__ == '__main__':
@@ -126,6 +167,7 @@ if __name__ == '__main__':
 
     # Create a PiCamera object
     logger.info("Setting PiCamera")
+    RECORDING = False
     VIDEO_FILE = ""
     VIDEO_SIZE = (config["VIDEO_WIDTH"], config["VIDEO_HEIGHT"])
     VIDEO_DURATION = config["VIDEO_DURATION"]
