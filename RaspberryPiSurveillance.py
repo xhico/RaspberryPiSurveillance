@@ -45,6 +45,7 @@ def on_motion():
         whiteMatrix = [(255, 255, 255) for _ in range(64)]
         sense.set_pixels(whiteMatrix)
 
+    # Create VIDEO_FILE Path
     timestamp = datetime.datetime.now().strftime("%H-%M-%S")
     day = datetime.datetime.now().strftime("%Y-%m-%d")
     VIDEO_FILE = os.path.join(RECORDINGS_FOLDER, day, day + "_" + timestamp + ".mp4")
@@ -71,12 +72,14 @@ def off_motion():
 
     global VIDEO_FILE, RECORDING
 
+    # Stop Recording
     logger.info("No motion detected.")
     camera.stop_recording()
     sense.clear()
     RECORDING = False
     logger.info("Video recording stopped.")
 
+    # Send Email
     VIDEO_DATE = os.path.basename(VIDEO_FILE).replace(".mp4", "")
     sendEmail("EYE - " + VIDEO_DATE, "Motion detected at " + VIDEO_DATE)
     logger.info("Email notification sent successfully.")
