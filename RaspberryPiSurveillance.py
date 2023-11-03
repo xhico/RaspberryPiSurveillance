@@ -38,10 +38,10 @@ def on_motion():
     """
     logger.info("Motion detected!")
 
-    # Display these colours on the LED matrix
-    w = (255, 255, 255)
-    whiteMatrix = [w for _ in range(64)]
-    sense.set_pixels(whiteMatrix)
+    # Light the matrix
+    if not STEALTH_MODE:
+        whiteMatrix = [(255, 255, 255) for _ in range(64)]
+        sense.set_pixels(whiteMatrix)
 
     global VIDEO_FILE
     timestamp = datetime.datetime.now().strftime("%H-%M-%S")
@@ -82,6 +82,7 @@ def off_motion():
         thumbnail_img = Image.fromarray(clip.get_frame(random.random() * clip.duration))
         thumbnail_img.thumbnail((int(clip.w / (clip.h / 240)), int(clip.h / (clip.h / 240))))
         thumbnail_img.save(VIDEO_FILE.replace(".mp4", ".png"), optimize=True)
+    logger.info("Thumbnail Generated")
 
 
 def main():
@@ -132,6 +133,7 @@ if __name__ == '__main__':
 
     # Create sense hat
     sense = SenseHat()
+    STEALTH_MODE = config["STEALTH_MODE"]
 
     # Main
     try:
